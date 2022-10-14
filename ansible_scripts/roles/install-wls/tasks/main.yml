@@ -1,0 +1,99 @@
+---
+- name: find weblogic installer jar to copy
+  shell: "find {{ role_path }}/files -maxdepth 1 -type f -name '*.jar'"
+  delegate_to: "127.0.0.1"
+  register: weblogic_install_jar
+  become: false
+
+- name: debug weblogic_install_jar
+  debug:
+    msg: "{{ weblogic_install_jar }}"
+
+- name: cleanup weblogic installation directory, if present
+  file:
+    path: "{{ wls_install_base }}"
+    state: absent
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: create weblogic installation directory 
+  file:
+     path: "{{ wls_install_base }}"
+     state: directory
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: remove old copies of weblogic install jar, if any
+  shell: "rm -f ~/*.jar"
+  become: true
+
+- name: Copy weblogic install jar to host root
+  copy: src="{{ weblogic_install_jar.stdout }}" dest="~" 
+  args:
+    force: true
+  become: true
+
+- name: find weblogic install jar that has been copied on remote
+  find:
+    paths: "~"
+    pattern: "*.jar"
+  register: remote_wls_install_binary
+  become: true
+
+- name: debug remote_wls_install_binary
+  debug:
+     msg: "{{ remote_wls_install_binary }}"
+
+- name: Copy weblogic install jar from host root to wls install base
+  copy: src="{{ remote_wls_install_binary.files[0].path }}" dest="{{ wls_install_base }}" remote_src="yes"
+  args:
+    force: yes  
+  become: true
+
+- name: Change ownership of weblogic install directory 
+  file: path="{{ wls_install_base }}" owner={{ oracle_user }} group={{ oracle_group }} recurse=yes
+  become: true
+
+- name: copy weblogic installer templates - oraInst.loc
+  template: src="{{ oraInst_loc_file }}" dest="{{ wls_install_base }}/{{ oraInst_loc_file }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: copy weblogic installer templates - response file
+  template: src="{{ response_file }}" dest="{{ wls_install_base }}/{{ response_file }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: Install Weblogic   
+  register: wlsinstall
+  shell: "java -jar {{ wls_install_base }}/fmw*.jar -silent -invPtrLoc {{ wls_install_base }}/{{ oraInst_loc_file }} -responseFile {{ wls_install_base }}/{{ response_file }} -novalidation INSTALL_TYPE='{{ install_type }}'"
+  args:
+    chdir: "{{ wls_install_base }}"  
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: Display Java and WebLogic version   
+  register: wlsinstall
+  shell: ". {{ weblogic_home }}/server/bin/setWLSEnv.sh && java -version && java weblogic.version"
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: cleanup weblogic installer files
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "{{ wls_install_base }}/{{ wls_installer }}"
+    - "{{ wls_install_base }}/{{ oraInst_loc_file }}"
+    - "{{ wls_install_base }}/{{ response_file }}"    
+  become: true
+  become_user: "{{ oracle_user }}"
+  
+- name: remove weblogic install jar from /root
+  become: yes
+  become_user: root
+  shell: "rm -rf /root/{{ wls_installer }}"
+  ignore_errors: true
+
+  
+

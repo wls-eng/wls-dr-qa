@@ -1,0 +1,34 @@
+# Common paths and names
+base_dir: '/u01/app'
+domain_home: '/u01/domains'
+wls_install_base: '{{ base_dir }}/wls/install'
+inventory_location: '{{ wls_install_base }}/inventory'
+middleware_home: '{{ wls_install_base }}/Oracle/Middleware/Oracle_Home'
+middleware_common_home: '{{ middleware_home }}/oracle_common'
+weblogic_home: '{{ middleware_home }}/wlserver'
+
+# WLS installation related files
+response_file: 'response'
+oraInst_loc_file: 'oraInst.loc'
+install_type: 'WebLogic Server'
+
+# Oracle os user and group
+oracle_user: 'oracle'
+oracle_group: 'oracle'
+
+# JDK installer and installation directory
+jdk_installation_archive: 'jdk*.tar.gz'
+jdk_base: '{{ base_dir }}/jdk'
+
+# wls installer
+wls_installer: 'fmw*.jar'
+
+#proxy settings
+proxy_env:
+  http_proxy:  http://www-proxy-hqdc.us.oracle.com:80
+  https_proxy: http://www-proxy-hqdc.us.oracle.com:80
+  HTTP_PROXY:  http://www-proxy-hqdc.us.oracle.com:80
+  HTTPS_PROXY: http://www-proxy-hqdc.us.oracle.com:80
+  no_proxy:    localhost,127.0.0.1,us.oracle.com,.oraclecorp.com,.oraclevcn.com
+  NO_PROXY:    localhost,127.0.0.1,us.oracle.com,.oraclecorp.com,.oraclevcn.com
+
