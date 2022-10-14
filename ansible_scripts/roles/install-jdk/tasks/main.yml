@@ -1,0 +1,77 @@
+---
+- name: find jdk archive to copy
+  shell: "find {{ role_path }}/files -maxdepth 1 -type f -name '*.tar.gz'"
+  delegate_to: "127.0.0.1"
+  register: jdk_install_binary
+  become: false
+
+- name: remove old copies of jdk install binary, if any
+  shell: "rm -f ~/*.tar.gz"
+  become: true
+
+- name: Copy jdk archive to host
+  copy: src="{{ jdk_install_binary.stdout }}" dest="~"
+  args:
+    force: yes  
+  become: true
+
+- name: create jdk base directory 
+  file:
+     path: "{{ jdk_base }}"
+     state: directory
+  become: true
+
+- name: find jdk archive that has been copied on remote
+  find:
+    paths: "~"
+    pattern: "*.tar.gz"
+  register: remote_jdk_install_binary
+  become: true
+
+- name: Extract JDK archive 
+  unarchive: 
+    src:  "{{ remote_jdk_install_binary.files[0].path }}"
+    dest: "{{ jdk_base }}" 
+    remote_src: yes
+    list_files: yes  
+  register: archive_contents
+  become: true
+
+- name: Change ownership of jdk directory 
+  file: path="{{ jdk_base }}" owner={{ oracle_user }} group={{ oracle_group }} recurse=yes
+  become: true
+
+- name: Change entropy device for java
+  command: "sed -i.bak 's/\\/dev\\/random/\\/dev\\/.\\/urandom/' {{ jdk_base }}/{{ archive_contents.files[0].split('/')[0] }}/jre/lib/security/java.security"
+  become: true  
+
+- name: Create a directory if it does not exist
+  file: path="/home/{{ oracle_user }}" state="directory" mode="0755" owner="{{ oracle_user }}" group="{{ oracle_group }}"
+  become: true
+  
+- name: create .bashrc if not present and set permissions 0744
+  file: path="/home/{{ oracle_user }}/.bashrc" state="touch" mode="u=rwx" owner="{{ oracle_user }}" group="{{ oracle_group }}"
+  become: true
+
+- name: Add JAVA_HOME environment variariables in bashrc
+  lineinfile: dest='/home/{{ oracle_user }}/.bashrc' line='export JAVA_HOME={{ jdk_base }}/{{ archive_contents.files[0].split('/')[0] }}'
+  become: yes
+  become_user: "{{ oracle_user }}"
+
+- name: Add Java bin folder to path in bashrc
+  lineinfile: dest='/home/{{ oracle_user }}/.bashrc' line='export PATH=$PATH:$JAVA_HOME/bin'
+  become: yes
+  become_user: "{{ oracle_user }}"
+
+- name: Create a Soft link to the new java installation
+  become: yes
+  become_user: root
+  shell: "ln -sf {{ jdk_base }}/{{ archive_contents.files[0].split('/')[0] }}/bin/java /usr/bin/java"
+  ignore_errors: true
+
+
+- name: remove jdk binary from /root
+  become: yes
+  become_user: root
+  shell: "rm -rf /root/{{ jdk_installation_archive }}"
+  ignore_errors: true

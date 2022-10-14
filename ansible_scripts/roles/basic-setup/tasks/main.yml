@@ -1,0 +1,87 @@
+--- 
+- name: create oracle group
+  group:
+    name: "{{ oracle_group }}"
+    state: present
+  tags: basic-setup
+
+- name: create oracle user
+  user:
+    name: "{{ oracle_user }}"
+    state: present
+    group: "{{ oracle_group }}"
+  tags: basic-setup
+
+- name: create directories required by oracle user
+  file:
+    path: "{{ item }}"
+    owner: "{{ oracle_user }}"
+    group: "{{ oracle_group }}"
+    mode: 0744
+    recurse: yes
+    state: directory
+  with_items: ["{{ base_dir }}", "{{ domain_home }}"]
+  tags: basic-setup
+
+- name: install git
+  yum:
+    name: git
+    state: present
+    update_cache: true            
+  environment: "{{ proxy_env }}"
+  become: true
+  tags: install-utils,basic-setup
+
+- name: install wget
+  yum:
+    name: wget
+    state: present
+    update_cache: true
+  environment: "{{ proxy_env }}"
+  become: true
+  tags: install-utils,basic-setup
+
+- name: install tar
+  yum:
+    name: tar
+    state: present
+    update_cache: true
+  environment: "{{ proxy_env }}"
+  become: true
+  tags: install-utils,basic-setup
+
+- name: install zip
+  yum:
+    name: zip
+    state: present
+    update_cache: true
+  environment: "{{ proxy_env }}"
+  become: true
+  tags: install-utils,basic-setup
+
+- name: install unzip
+  yum:
+    name: unzip 
+    state: present
+    update_cache: true
+  environment: "{{ proxy_env }}"
+  become: true
+  tags: install-utils,basic-setup
+
+- name: install gzip
+  yum:
+    name: gzip 
+    state: present
+    update_cache: true
+  environment: "{{ proxy_env }}"
+  become: true
+  tags: install-utils,basic-setup
+
+- name: install net-tools
+  yum:
+    name: net-tools 
+    state: present
+    update_cache: true
+  environment: "{{ proxy_env }}"
+  become: true
+  tags: install-utils,basic-setup

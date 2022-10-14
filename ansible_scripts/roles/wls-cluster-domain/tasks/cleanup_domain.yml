@@ -1,0 +1,36 @@
+---
+- include_vars: vars.yaml
+  tags: cleanupClusterDomain
+
+- name: kill nodemanager process
+  shell: "systemctl stop wls_nodemanager.service || true"
+  become: true
+  tags: cleanupClusterDomain
+
+- name: kill admin server process
+  shell: "systemctl stop wls_admin.service || true"
+  become: true
+  tags: cleanupClusterDomain
+
+- name: kill any remaining weblogic process
+  shell: "ps -ef|grep java|grep -v 'weblogic'|awk '{ print $2; }'|xargs kill -9 || true"
+  become: true
+  tags: cleanupClusterDomain
+
+- name: cleanup script directory, if already present
+  file:
+    path: "{{ script_dir }}"
+    state: absent
+  become: true
+  become_user: "{{ oracle_user }}"
+  tags: cleanupClusterDomain
+
+- name: cleanup domain directory, if already present
+  file:
+    path: "{{ domain_dir }}"
+    state: absent
+  become: true
+  become_user: "{{ oracle_user }}"
+  tags: cleanupClusterDomain
+
+

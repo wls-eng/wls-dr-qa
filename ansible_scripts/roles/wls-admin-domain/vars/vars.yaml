@@ -1,0 +1,28 @@
+#admin server settings
+admin_external_ip: "{{ hostvars[groups['admin_vm'][0]].inventory_hostname }}"
+#admin_host: "{{ hostvars[groups['admin_vm'][0]].internal_ip }}"
+admin_host: "{{ ansible_fqdn }}"
+admin_port: '7001'
+admin_ssl_port: '7002'
+admin_server_name: 'adminServer'
+admin_user: 'weblogic'
+
+# Domain Name
+domain_name: 'adminDomain'
+domain_home: '/u01/domains'
+domain_dir: '{{ domain_home }}/{{ domain_name }}'
+domain_template: '{{ weblogic_home }}/common/templates/wls/wls.jar'
+domain_classpath: '/Security/base_domain/User/{{admin_user}}'
+
+#script directory
+script_dir: '/u01/app/scripts'
+
+# Nodemanager and server settings
+nm_home : '{{ domain_home }}/nodemanager'
+nm_listen_port: '5556'
+nm_listen_address: '{{ ansible_fqdn }}'
+nm_machine_name: 'adminMachine'
+nm_user: 'weblogic'
+
+# server startup arguments
+admin_server_startup_arguments: '-Dlog4j2.formatMsgNoLookups=true'

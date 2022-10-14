@@ -1,0 +1,34 @@
+---
+- include_vars: vars.yaml
+
+- name: modify nodemanager.properties file
+  replace:
+    path: "{{ domain_home }}/{{ domain_name }}/nodemanager/nodemanager.properties"
+    regexp: '^.*ListenAddress=.*$'
+    replace: 'ListenAddress={{ ansible_fqdn }}'
+  become: true
+  tags: start-nodemanager 
+
+- name: unblock nodemanager port
+  shell: sudo firewall-cmd --zone=public --add-port={{ nm_listen_port }}/tcp
+  args:
+    executable: /bin/bash
+  become: true
+  tags: start-nodemanager
+
+- name: Copy nodemanager systemd script
+  template: src=wls_nodemanager.service dest=/etc/systemd/system/ mode=0664
+  tags: start-nodemanager
+
+- name: Enable nodemanager as linux service
+  command: 'systemctl enable wls_nodemanager'
+  tags: start-nodemanager
+
+- name: Start Node Manager
+  command: 'systemctl start wls_nodemanager'
+  tags: start-nodemanager
+
+- name: Wait for Nodemanager to come up
+  wait_for: "host={{ nm_listen_address }} port={{ nm_listen_port }} delay=2 timeout=30"
+  tags: start-nodemanager 
+
