@@ -1,0 +1,144 @@
+---
+- include_vars: vars.yaml
+
+- name: stop ohs component if present
+  command: 'systemctl stop ohs_component'
+  ignore_errors: true
+  become: true
+
+- name: stop ohs nodemanager if present
+  command: 'systemctl stop ohs_nodemanager'
+  ignore_errors: true
+  become: true
+
+- name: cleanup ohs domain directory, if present
+  file:
+    path: "{{ ohs_domain_dir }}"
+    state: absent
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: cleanup ohs work directory, if present
+  file:
+    path: "{{ ohs_work_dir }}"
+    state: absent
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: create ohs work directory
+  file:
+     path: "{{ ohs_work_dir }}"
+     state: directory
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: create ohs domain directory
+  file:
+     path: "{{ ohs_domain_dir }}"
+     state: directory
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: copy ohs_domain_py_script
+  template: src="{{ ohs_domain_py_script }}" dest="{{ ohs_work_dir }}/{{ ohs_domain_py_script }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: Change ownership of ohs work_dir directory
+  file: path="{{ ohs_work_dir }}" owner={{ oracle_user }} group={{ oracle_group }} recurse=yes
+  become: true
+
+- name: Create OHS Domain
+  register: ohsinstall
+  shell: "{{ ohs_install_base }}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh {{ohs_work_dir}}/{{ ohs_domain_py_script }}"
+  args:
+    chdir: "{{ ohs_install_base }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: copy ohs_start_component_script
+  template: src="{{ ohs_start_component_script }}" dest="{{ ohs_domain_dir }}/{{ ohs_start_component_script }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: copy ohs_stop_component_script
+  template: src="{{ ohs_stop_component_script }}" dest="{{ ohs_domain_dir }}/{{ ohs_stop_component_script }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: Change ownership of ohs work_dir directory
+  file: path="{{ ohs_work_dir }}" owner={{ oracle_user }} group={{ oracle_group }} recurse=yes
+  become: true
+
+- name: Copy OHS NodeManager service script to systemd script
+  template: src=ohs_nodemanager.service dest=/etc/systemd/system/ mode=0664
+  become: true
+
+- name: Enable OHS Nodemanager service as linux service
+  command: 'systemctl enable ohs_nodemanager'
+  become: true
+
+- name: Reload Systemctl Daeomon
+  command: 'systemctl daemon-reload'
+  become: true
+
+- name: Start OHS Nodemanager Service
+  command: 'systemctl start ohs_nodemanager'
+  become: true
+
+- name: Verify OHS Nodemanager service
+  shell: 'systemctl status ohs_nodemanager | grep active'
+  register: ohs_nodemanager_start_result
+  become: true
+
+- name: Copy OHS Component service script to systemd script
+  template: src=ohs_component.service dest=/etc/systemd/system/ mode=0664
+  become: true
+
+- name: Enable OHS Component service as linux service
+  command: 'systemctl enable ohs_component'
+  become: true
+
+- name: Reload Systemctl Daeomon
+  command: 'systemctl daemon-reload'
+  become: true
+
+- name: copy script to get cluster address
+  template: src=getWLSClusterAddress.sh.template dest=getWLSClusterAddress.sh
+  become: true
+
+- name: Get WebLogic Cluster address
+  shell: sh getWLSClusterAddress.sh
+  register: cluster_address
+
+- name: print cluster nm_listen_address
+  debug:
+        msg: "{{ cluster_address.stdout }}"
+
+- name: copy mod_wl_ohs.conf to ohs configuration directory
+  template: src=mod_wl_ohs.conf dest={{ohs_domain_dir}}/config/fmwconfig/components/OHS/{{ohs_component_name}}/
+
+- name: Start OHS Component service
+  shell: 'systemctl start ohs_component && sleep 30s && systemctl status ohs_component | grep active'
+  register: ohs_component_start_result
+  become: true
+
+- name: Enable OHS HTTP_PORT {{ ohs_http_port }}
+  command: 'firewall-cmd --zone=public --add-port={{ ohs_http_port }}/tcp'
+  register: ohs_component_start_result
+  become: true
+
+- name: Enable OHS HTTPS_PORT {{ ohs_https_port }}
+  command: 'firewall-cmd --zone=public --add-port={{ ohs_https_port }}/tcp'
+  register: ohs_component_start_result
+  become: true
+
+- name: Enable Permanently Firewall Changes
+  command: 'firewall-cmd --runtime-to-permanent'
+  register: ohs_component_start_result
+  become: true
+
+- name: Restart Firewall
+  command: 'systemctl restart firewalld'
+  register: ohs_component_start_result
+  become: true

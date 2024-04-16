@@ -1,0 +1,48 @@
+--- 
+- name: create oracle group
+  group:
+    name: "{{ oracle_group }}"
+    state: present
+  
+  tags: basic-ohs-setup
+
+- name: create oracle user
+  user:
+    name: "{{ oracle_user }}"
+    state: present
+    group: "{{ oracle_group }}"
+  
+  tags: basic-ohs-setup
+
+- name: create directories required by oracle user
+  file:
+    path: "{{ item }}"
+    owner: "{{ oracle_user }}"
+    group: "{{ oracle_group }}"
+    mode: 0744
+    recurse: yes
+    state: directory
+  with_items: ["{{ base_dir }}", "{{ domain_home }}"]
+  
+  tags: basic-ohs-setup
+
+- name: if pca environment, set proxy
+  set_fact:
+    proxy_env: "{{ pca_proxy_env }}"
+  when: pca_env| bool
+
+- name: if not pca environment, then dont set proxy
+  set_fact:
+    proxy_env: ""
+  when: not pca_env| bool
+
+- name: install utilities
+  yum:
+    name: ['git', 'wget', 'tar', 'zip', 'unzip', 'gzip', 'net-tools', 'binutils', 'compat-libcap1' , 'compat-libstdc++-33' , 'compat-libstdc++-33.i686' , 'gcc' , 'gcc-c++' , 'glibc' , 'glibc.i686' , 'glibc-devel' , 'libaio' , 'libaio-devel' , 'libgcc' , 'libgcc.i686' , 'libstdc++' , 'libstdc++.i686' , 'libstdc++-devel' , 'ksh' , 'make' , 'sysstat' , 'numactl' , 'numactl-devel']
+    state: present
+    update_cache: true            
+  environment: "{{ proxy_env }}"
+  become: true
+  
+  tags: install-utils,basic-ohs-setup
+

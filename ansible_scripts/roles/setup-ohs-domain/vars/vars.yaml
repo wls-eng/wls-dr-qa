@@ -1,0 +1,26 @@
+#ohs domain settings
+ohs_domain_name: 'ohs_standalone_domain'
+ohs_base_dir: '{{ base_dir }}/ohs/domains'
+ohs_domain_dir: '{{ base_dir }}/ohs/domains/{{ ohs_domain_name }}'
+ohs_component_name: 'ohs_component'
+ohs_http_port: 7777
+ohs_https_port: 4443
+ohs_nm_user: 'ohsnmuser'
+ohs_nm_pswd: 'ohsnm@5678'
+
+ohs_domain_py_script: 'create-ohs-domain.py'
+ohs_start_component_script: 'start-ohs-component.py'
+ohs_stop_component_script: 'stop-ohs-component.py'
+
+admin_external_ip: "{{ hostvars[groups['admin_vm'][0]].inventory_hostname }}"
+admin_host: "{{ hostvars[groups['admin_vm'][0]]['ansible_fqdn'] }}"
+admin_t3_protocol: 't3'
+admin_http_protocol: 'http'
+admin_port: '7001'
+admin_ssl_port: '7002'
+admin_secure_port: '{{ admin_ssl_port }}'
+admin_server_name: 'adminServer'
+admin_user: 'adminuser'
+admin_t3_url: '{{ admin_t3_protocol }}://{{ admin_host }}:{{ admin_port }}'
+admin_console_url: '{{ admin_http_protocol }}://{{ admin_external_ip }}:{{ admin_port }}/console'
+admin_rest_management_url: '{{admin_http_protocol}}://{{ admin_host }}:{{ admin_port }}/management/weblogic/latest'

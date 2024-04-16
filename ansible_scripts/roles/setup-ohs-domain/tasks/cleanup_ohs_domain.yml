@@ -1,0 +1,30 @@
+---
+- include_vars: vars.yaml
+  when: not secure_mode_enabled | bool
+
+- include_vars: secure_vars.yaml
+  when: secure_mode_enabled | bool
+
+- name: kill ohs component process
+  shell: "systemctl stop ohs_component.service || true"
+  become: true
+
+- name: kill ohs nodemanager process
+  shell: "systemctl stop ohs_nodemanager.service || true"
+  become: true
+
+- name: wait for 30 seconds to wait and see if any wls stale process exists
+  command: 'sleep 30s'
+
+- name: kill any remaining weblogic process
+  shell: "ps -fu oracle | grep ohs_standalone_omain | grep -v grep | awk '{print $2}' | xargs kill -9 || true"
+  become: true
+
+- name: cleanup domain directory, if already present
+  file:
+    path: "{{ ohs_domain_dir }}"
+    state: absent
+  become: true
+  become_user: "{{ oracle_user }}"
+
+

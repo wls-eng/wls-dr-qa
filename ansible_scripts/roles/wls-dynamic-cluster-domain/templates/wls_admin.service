@@ -1,0 +1,20 @@
+[Unit]
+Description=WebLogic Adminserver service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory={{ domain_home }}/{{ domain_name }}
+Environment="JAVA_OPTIONS={{ server_startup_arguments }}"
+ExecStart=/bin/bash {{ domain_home }}/{{ domain_name }}/startWebLogic.sh
+ExecStop=/bin/bash {{ domain_home }}/{{ domain_name }}/bin/stopWebLogic.sh "{{ admin_user }}" "{{ admin_password }}" "{{ admin_t3_url }}"
+User=oracle
+Group=oracle
+KillMode=process
+LimitNOFILE=65535
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

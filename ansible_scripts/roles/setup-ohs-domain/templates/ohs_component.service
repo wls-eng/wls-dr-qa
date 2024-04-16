@@ -1,0 +1,19 @@
+[Unit]
+Description=OHS Component service
+After=ohs_nodemanager.service
+Wants=ohs_nodemanager.service
+	
+[Service]
+Type=oneshot
+RemainAfterExit=true
+WorkingDirectory="{{ ohs_domain_dir }}"
+ExecStart={{ ohs_install_base }}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh {{ ohs_domain_dir }}/start-ohs-component.py
+ExecStop={{ ohs_install_base }}/oracle/middleware/oracle_home/oracle_common/common/bin/wlst.sh {{ ohs_domain_dir }}/stop-ohs-component.py
+User=oracle
+Group=oracle
+KillMode=process
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
+

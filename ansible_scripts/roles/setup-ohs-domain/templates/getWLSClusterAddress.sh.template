@@ -1,0 +1,10 @@
+#!/bin/bash
+
+export restArgs=" -v --user {{admin_user}}:{{admin_password}} -H X-Requested-By:MyClient -H Accept:application/json -H Content-Type:application/json"
+
+curl $restArgs -X GET {{admin_rest_management_url}}/domainRuntime/serverRuntimes?fields=defaultURL > out
+
+msString=` cat out | grep defaultURL  | grep -v "7001\|7002" | cut -f3 -d"/" `
+wlsClusterAddress=`echo $msString | sed 's/\" /,/g'`
+WLS_CLUSTER_ADDRESS=${wlsClusterAddress::-1}
+echo ${WLS_CLUSTER_ADDRESS}

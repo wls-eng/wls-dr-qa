@@ -1,0 +1,64 @@
+---
+- include_vars: vars.yaml
+  when: not secure_mode_enabled | bool
+
+- include_vars: secure_vars.yaml
+  when: secure_mode_enabled | bool
+
+- name: unblock admin port
+  shell: sudo firewall-cmd --zone=public --add-port={{ admin_port }}/tcp
+  args:
+    executable: /bin/bash
+  become: true
+
+- name: unblock admin ssl port
+  shell: sudo firewall-cmd --zone=public --add-port={{ admin_ssl_port }}/tcp
+  args:
+    executable: /bin/bash
+  become: true
+
+- name: unblock secure admin port
+  shell: sudo firewall-cmd --zone=public --add-port={{ admin_secure_port }}/tcp
+  args:
+    executable: /bin/bash
+  become: true
+
+- name: unblock managed server port
+  shell: sudo firewall-cmd --zone=public --add-port={{ item }}/tcp
+  args:
+    executable: /bin/bash
+  with_sequence: start="{{ ms_port_min }}" end="{{ ms_port_max }}" stride=1
+  become: true
+
+- name: unblock managed server ssl port
+  shell: sudo firewall-cmd --zone=public --add-port={{ item }}/tcp
+  args:
+    executable: /bin/bash
+  with_sequence: start="{{ ms_ssl_port_min }}" end="{{ ms_ssl_port_max }}" stride=1
+  become: true
+
+- name: unblock managed server channel port
+  shell: sudo firewall-cmd --zone=public --add-port={{ item }}/tcp
+  args:
+    executable: /bin/bash
+  with_sequence: start="{{ ms_channel_port_min }}" end="{{ ms_channel_port_max }}" stride=1
+  become: true
+
+- name: unblock managed server local administration ovveride port
+  shell: sudo firewall-cmd --zone=public --add-port={{ item }}/tcp
+  args:
+    executable: /bin/bash
+  with_sequence: start="{{ local_administration_port_override }}" end="{{ local_administration_port_override + max_dynamic_cluster_size }}" stride=1
+  become: true
+
+- name: make port unblocking changes permanent
+  shell: sudo firewall-cmd --runtime-to-permanent
+  args:
+    executable: /bin/bash
+  become: true
+
+- name: restart firewall daemon
+  shell: sudo systemctl restart firewalld
+  args:
+    executable: /bin/bash
+  become: true

@@ -1,0 +1,74 @@
+---
+- name: find jdk archive to copy
+  shell: "find {{ role_path }}/files -maxdepth 1 -type f -name '*.tar.gz'"
+  delegate_to: "127.0.0.1"
+  register: ohs_jdk_install_binary
+  become: false
+
+
+- name: remove old copies of jdk install binary, if any
+  shell: "rm -f ~/*.tar.gz"
+  become: true
+
+
+- name: Copy ohs specific jdk archive to host
+  copy: src="{{ ohs_jdk_install_binary.stdout }}" dest="~"
+  args:
+    force: yes
+  become: true
+
+
+- name: create jdk base directory
+  file:
+     path: "{{ ohs_jdk_base }}"
+     state: directory
+  become: true
+  become_user: "{{ oracle_user }}"
+
+
+- name: find jdk archive that has been copied on remote
+  find:
+    paths: "~"
+    pattern: "*.tar.gz"
+  register: remote_jdk_install_binary
+  become: true
+
+- name: Extract JDK archive
+  unarchive:
+    src:  "{{ remote_jdk_install_binary.files[0].path }}"
+    dest: "{{ ohs_jdk_base }}"
+    remote_src: yes
+    list_files: yes
+  register: archive_contents
+  become: true
+
+- name: Change ownership of jdk directory
+  file: path="{{ ohs_base }}" owner={{ oracle_user }} group={{ oracle_group }} recurse=yes
+  become: true
+
+- name: Change entropy device for java
+  command: "sed -i.bak 's/\\/dev\\/random/\\/dev\\/.\\/urandom/' {{ ohs_jdk_base }}/{{ archive_contents.files[0].split('/')[0] }}/jre/lib/security/java.security"
+  become: true
+  become_user: "{{ oracle_user }}"
+
+
+- name: Create a directory if it does not exist
+  file: path="/home/{{ oracle_user }}" state="directory" mode="0755" owner="{{ oracle_user }}" group="{{ oracle_group }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+
+
+- name: create .bashrc if not present and set permissions 0744
+  file: path="/home/{{ oracle_user }}/.bashrc" state="touch" mode="u=rwx" owner="{{ oracle_user }}" group="{{ oracle_group }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: set fact for OHS_JAVA_HOME on ohs_vm to be used during ohs installation
+  set_fact:
+      ohs_java_home: "{{ ohs_jdk_base }}/{{ archive_contents.files[0].split('/')[0] }}"
+
+- name: remove jdk binary from /root
+  become: yes
+  become_user: root
+  shell: "rm -rf /root/{{ jdk_installation_archive }}"
+  ignore_errors: true

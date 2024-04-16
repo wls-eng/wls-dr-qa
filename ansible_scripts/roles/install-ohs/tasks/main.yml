@@ -1,0 +1,112 @@
+---
+- name: find ohs installer bin to copy
+  shell: "find {{ role_path }}/files -maxdepth 1 -type f -name 'fmw*_ohs_linux64.bin'"
+  delegate_to: "127.0.0.1"
+  register: ohs_install_bin
+  become: false
+
+- name: debug ohs_install_bin
+  debug:
+    msg: "{{ ohs_install_bin }}"
+
+- name: debug OHS_JAVA_HOME environment variable
+  debug:
+    msg: "{{ hostvars[groups['ohs_vm'][0]]['ohs_java_home'] }}"
+
+- name: cleanup ohs installation directory, if present
+  file:
+    path: "{{ ohs_install_base }}"
+    state: absent
+  become: true
+  become_user: "{{ oracle_user }}"
+
+
+- name: create ohs installation directory
+  file:
+     path: "{{ ohs_install_base }}"
+     state: directory
+  become: true
+  become_user: "{{ oracle_user }}"
+
+
+- name: create ohs installation silent template directory
+  file:
+     path: "{{ ohs_install_base }}/silent_template"
+     state: directory
+  become: true
+  become_user: "{{ oracle_user }}"
+
+
+- name: remove old copies of ohs install bin, if any
+  shell: "rm -f ~/*.bin"
+  become: true
+
+
+- name: Copy ohs install bin to host root
+  copy: src="{{ ohs_install_bin.stdout }}" dest="~"
+  args:
+    force: true
+  become: true
+
+
+- name: find ohs install bin that has been copied on remote
+  find:
+    paths: "~"
+    pattern: "*.bin"
+  register: remote_ohs_install_binary
+  become: true
+
+
+- name: debug remote_ohs_install_binary
+  debug:
+     msg: "{{ remote_ohs_install_binary }}"
+
+
+- name: Copy ohs install bin from host root to wls install base
+  copy: src="{{ remote_ohs_install_binary.files[0].path }}" dest="{{ ohs_install_base }}" remote_src="yes"
+  args:
+    force: yes
+  become: true
+
+
+- name: Change ownership of ohs install directory
+  file: path="{{ ohs_install_base }}" owner={{ oracle_user }} group={{ oracle_group }} recurse=yes
+  become: true
+
+
+- name: copy ohs installer templates - oraInst.loc
+  template: src="{{ oraInst_loc_file }}" dest="{{ ohs_install_base }}/silent_template/{{ oraInst_loc_file }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+
+
+- name: copy ohs installer templates - response file
+  template: src="{{ response_file }}" dest="{{ ohs_install_base }}/silent_template/{{ response_file }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+
+
+- name: provide executable permissions on ohs installer
+  shell: "chmod +x {{ ohs_install_base }}/fmw*_ohs_linux64.bin"
+  become: true
+  become_user: "{{ oracle_user }}"
+
+
+- name: Install ohs
+  register: ohsinstall
+  shell: "{{ ohs_install_base }}/fmw*_ohs_linux64.bin -silent -invPtrLoc {{ ohs_install_base }}/silent_template/{{ oraInst_loc_file }} -responseFile {{ ohs_install_base }}/silent_template/{{ response_file }}"
+  args:
+    chdir: "{{ ohs_install_base }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: cleanup ohs installer files
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "{{ ohs_install_base }}/fmw*_ohs_linux64.bin"
+    - "{{ ohs_install_base }}/silent_template/{{ oraInst_loc_file }}"
+    - "{{ ohs_install_base }}/silent_template/{{ response_file }}"
+  become: true
+  become_user: "{{ oracle_user }}"

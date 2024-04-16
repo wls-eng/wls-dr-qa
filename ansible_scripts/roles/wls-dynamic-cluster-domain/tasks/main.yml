@@ -1,0 +1,242 @@
+---
+- include_vars: vars.yaml
+  when: not secure_mode_enabled | bool
+
+- include_vars: secure_vars.yaml
+  when: secure_mode_enabled | bool
+
+- include_role:
+    name: wls-dynamic-cluster-domain
+    tasks_from: cleanup_domain
+
+- name: update /etc/hosts file with the inventory vm information
+  lineinfile:
+    dest: "/etc/hosts"
+    regexp: "^{{ hostvars[item]['ansible_default_ipv4']['address'] }}.*$"
+    line: "{{ hostvars[item]['ansible_default_ipv4']['address'] }} {{ hostvars[item]['ansible_fqdn'] }}"
+  become: true
+  with_items: "{{ groups['wls_vms'] }}"
+
+- name: create script directory
+  file:
+    path: "{{ script_dir }}"
+    state: directory
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: create domain directory
+  file:
+    path: "{{ domain_dir }}"
+    state: directory
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: copy create domain python script
+  template: src=createDynamicClusterDomain.py dest={{ script_dir }} owner={{ oracle_user }} group={{ oracle_group }}
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: create Weblogic Dynamic Cluster Domain
+  register: "domainsetup"
+  shell: "{{ weblogic_home }}/common/bin/wlst.sh {{ script_dir }}/createDynamicClusterDomain.py"
+  args:
+    chdir: "{{ domain_dir }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: Create security folder on Admin Server
+  file: state=directory path={{ domain_home }}/{{ domain_name }}/servers/{{ admin_server_name }}/security owner={{ oracle_user }} group={{ oracle_group }}
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: copy boot.properties file
+  template: src=boot.properties dest={{ domain_home }}/{{ domain_name }}/servers/{{ admin_server_name }}/security/ owner={{ oracle_user }} group={{ oracle_group }}
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: set umask 027 (chmod 740) for adminserver/security directory
+  file:
+    path: "{{ domain_home }}/{{ domain_name }}/servers/{{ admin_server_name }}/security"
+    state: directory
+    mode: '0740'
+    owner: "{{ oracle_user }}"
+    group: "{{ oracle_group }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: set umask 027 (chmod 740) for adminserver/security/boot.properties file
+  file:
+    path: "{{ domain_home }}/{{ domain_name }}/servers/{{ admin_server_name }}/security/boot.properties"
+    state: file
+    mode: '0740'
+    owner: "{{ oracle_user }}"
+    group: "{{ oracle_group }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: Copy admin server systemd script
+  template: src=wls_admin.service dest=/etc/systemd/system/ mode=0664
+  when: inventory_hostname in groups['admin_vm']
+
+- name: Reload systemctl daemon
+  command: 'systemctl daemon-reload'
+  become: true
+  when: inventory_hostname in groups['admin_vm']
+
+- name: Enable admin service as linux service
+  command: 'systemctl enable wls_admin'
+  when: inventory_hostname in groups['admin_vm']
+
+- name: Start Admin Server
+  command: 'systemctl start wls_admin'
+  when: inventory_hostname in groups['admin_vm']
+
+- name: "wait for Admin Server to startup"
+  uri:
+    url: "{{ weblogic_ready_url }}"
+    method: GET
+    validate_certs: no
+  register: _result
+  until: _result.status == 200
+  retries: 20
+  delay: 5
+  when: inventory_hostname in groups['admin_vm']
+
+- include_role:
+    name: wls-dynamic-cluster-domain
+    tasks_from: unblock_ports
+
+- name: copy wlst script to disable remote anonymous requests
+  template: src=disableRemoteAnonoymousLookup.py dest={{ script_dir }} owner={{ oracle_user }} group={{ oracle_group }}
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: run wlst script to disable remote anonymous requests
+  shell: "export WLST_PROPERTIES='-Dweblogic.security.TrustKeyStore=DemoTrust'; {{ weblogic_home }}/common/bin/wlst.sh {{ script_dir }}/disableRemoteAnonoymousLookup.py"
+  args:
+    chdir: "{{ domain_dir }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: Stop admin server process
+  shell: "systemctl stop wls_admin.service || true"
+  become: true
+  when: inventory_hostname in groups['admin_vm']
+
+- name: "wait for Admin Server to stop"
+  wait_for:
+    port: "{{ admin_port }}"
+    state: stopped
+    delay: 10
+    timeout: 30
+  when: inventory_hostname in groups['admin_vm']
+
+- name: delete domain.jar, if already exists
+  file:
+    path: "{{ domain_pack_jar }}"
+    state: absent
+  become: true
+  when: inventory_hostname in groups['admin_vm']
+
+- name: pack domain
+  shell: "{{ middleware_common_home }}/common/bin/pack.sh -domain {{ domain_dir }} -template {{ domain_pack_jar }} -template_name {{ domain_name }} -managed true"
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: fetch packed domain jar to local
+  fetch:
+    src: "{{ domain_pack_jar }}"
+    dest: "{{ role_path }}/files/"
+    flat: true
+  become: true
+  when: inventory_hostname in groups['admin_vm']
+
+- name: copy packed domain jar to managed server vms
+  copy:
+    src: "{{ domain_jar }}"
+    dest: "{{ base_dir }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['managed_server_vms'] and inventory_hostname not in groups['admin_vm']
+
+- name: unpack domain on managed server vms
+  shell: "{{ middleware_common_home }}/common/bin/unpack.sh -domain {{ domain_dir }} -template {{ domain_pack_jar }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['managed_server_vms'] and inventory_hostname not in groups['admin_vm']
+
+- name: Remove domain.jar from local
+  file:
+    path: "{{ role_path}}/files/{{ domain_jar }}"
+    state: absent
+  delegate_to: localhost
+  when: inventory_hostname in groups['admin_vm']
+  become: false
+
+- name: Remove domain.jar from managed server vms
+  file:
+    path: "{{ base_dir }}/{{ domain_jar }}"
+    state: absent
+  when: inventory_hostname in groups['managed_server_vms'] and inventory_hostname not in groups['admin_vm']
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- include_role:
+    name: wls-nodemanager
+
+- name: start admin server
+  command: 'systemctl start wls_admin'
+  when: inventory_hostname in groups['admin_vm']
+
+- name: "wait for Admin Server to startup"
+  uri:
+    url: "{{ weblogic_ready_url }}"
+    method: GET
+    validate_certs: no
+  register: _result
+  until: _result.status == 200
+  retries: 20
+  delay: 5
+  when: inventory_hostname in groups['admin_vm']
+
+- name: copy start cluster python script
+  template: src=startDynamicCluster.py dest={{ script_dir }} owner={{ oracle_user }} group={{ oracle_group }}
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: start managed servers
+  register: "startcluster"
+  shell: "export WLST_PROPERTIES='-Dweblogic.security.TrustKeyStore=DemoTrust'; {{ weblogic_home }}/common/bin/wlst.sh {{ script_dir }}/startDynamicCluster.py"
+  args:
+    chdir: "{{ domain_dir }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: "print admin console URL"
+  debug:
+    msg: "Admin Console URL: {{ admin_console_url }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: "verify admin console URL access"
+  uri:
+    url: "{{ admin_console_url }}"
+    method: GET
+    validate_certs: no
+  register: _result
+  until: _result.status == 200
+  retries: 5
+  delay: 5
+  when: inventory_hostname in groups['admin_vm']

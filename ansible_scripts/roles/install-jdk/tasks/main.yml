@@ -41,9 +41,24 @@
   file: path="{{ jdk_base }}" owner={{ oracle_user }} group={{ oracle_group }} recurse=yes
   become: true
 
-- name: Change entropy device for java
+- name: get stats for jre/lib/security directory
+  stat: path={{ jdk_base }}/{{ archive_contents.files[0].split('/')[0] }}/jre/lib/security
+  register: jre_lib_security_stat_result
+
+- name: Change entropy device for java in jre/lib/security/java.security file
   command: "sed -i.bak 's/\\/dev\\/random/\\/dev\\/.\\/urandom/' {{ jdk_base }}/{{ archive_contents.files[0].split('/')[0] }}/jre/lib/security/java.security"
-  become: true  
+  become: true
+  when: jre_lib_security_stat_result.stat.isdir|d(False)
+
+- name: get stats for conf/security directory
+  stat: path={{ jdk_base }}/{{ archive_contents.files[0].split('/')[0] }}/conf/security
+  register: conf_security_stat_result
+
+- name: Change entropy device for java in conf/security/java.security file 
+  command: "sed -i.bak 's/\\/dev\\/random/\\/dev\\/.\\/urandom/' {{ jdk_base }}/{{ archive_contents.files[0].split('/')[0] }}/conf/security/java.security"
+  become: true
+  when: conf_security_stat_result.stat.isdir|d(False)
+
 
 - name: Create a directory if it does not exist
   file: path="/home/{{ oracle_user }}" state="directory" mode="0755" owner="{{ oracle_user }}" group="{{ oracle_group }}"

@@ -1,0 +1,13 @@
+- name: Install Oracle HTTP Server
+  hosts:  ohs_vm
+  become: true
+  vars_files:
+    - global-vars.yml
+    - secrets.yml
+  roles:
+    - role: basic-ohs-setup
+      when: basic_ohs_setup | bool
+    - role: install-jdk-for-ohs
+      when: install_jdk_for_ohs | bool
+    - role: install-ohs
+      when: install_ohs | bool

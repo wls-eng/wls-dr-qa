@@ -1,0 +1,9 @@
+- name: Configure Domain on Oracle HTTP Server
+  hosts:  ohs_vm
+  become: true
+  vars_files:
+    - global-vars.yml
+    - secrets.yml
+  roles:
+    - role: setup-ohs-domain
+      when: setup_ohs_domain | bool

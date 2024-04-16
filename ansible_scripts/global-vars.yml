@@ -20,15 +20,23 @@ oracle_group: 'oracle'
 jdk_installation_archive: 'jdk*.tar.gz'
 jdk_base: '{{ base_dir }}/jdk'
 
+
+# OHS Specific JDK installer and installation directory
+ohs_base: '{{ base_dir}}/ohs'
+ohs_install_base: '{{ base_dir }}/ohs/install'
+ohs_jdk_base: '{{ base_dir }}/ohs/jdk'
+ohs_work_dir: '{{ base_dir }}/ohs/work'
+
 # wls installer
 wls_installer: 'fmw*.jar'
 
 #proxy settings
-proxy_env:
-  http_proxy:  http://www-proxy-hqdc.us.oracle.com:80
-  https_proxy: http://www-proxy-hqdc.us.oracle.com:80
-  HTTP_PROXY:  http://www-proxy-hqdc.us.oracle.com:80
-  HTTPS_PROXY: http://www-proxy-hqdc.us.oracle.com:80
-  no_proxy:    localhost,127.0.0.1,us.oracle.com,.oraclecorp.com,.oraclevcn.com
-  NO_PROXY:    localhost,127.0.0.1,us.oracle.com,.oraclecorp.com,.oraclevcn.com
+#proxy_env:
+#  http_proxy:  http://www-proxy-hqdc.us.oracle.com:80
+#  https_proxy: http://www-proxy-hqdc.us.oracle.com:80
+#  HTTP_PROXY:  http://www-proxy-hqdc.us.oracle.com:80
+#  HTTPS_PROXY: http://www-proxy-hqdc.us.oracle.com:80
+#  no_proxy:    localhost,127.0.0.1,us.oracle.com,.oraclecorp.com,.oraclevcn.com
+#  NO_PROXY:    localhost,127.0.0.1,us.oracle.com,.oraclecorp.com,.oraclevcn.com
 
+proxy_env: ''

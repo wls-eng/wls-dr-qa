@@ -1,0 +1,58 @@
+#admin server settings
+admin_external_ip: "{{ hostvars[groups['admin_vm'][0]].inventory_hostname }}"
+#admin_host: "{{ hostvars[groups['admin_vm'][0]]['ansible_default_ipv4']['address'] }}"
+admin_host: "{{ hostvars[groups['admin_vm'][0]]['ansible_fqdn'] }}"
+admin_t3_protocol: 't3'
+admin_http_protocol: 'http'
+admin_port: '7001'
+admin_ssl_port: '7002'
+admin_secure_port: '{{ admin_ssl_port }}'
+admin_server_name: 'adminServer'
+admin_user: 'adminuser'
+admin_t3_url: '{{ admin_t3_protocol }}://{{ admin_host }}:{{ admin_port }}'
+admin_console_url: '{{ admin_http_protocol }}://{{ admin_external_ip }}:{{ admin_port }}/console'
+admin_rest_management_url: '{{admin_http_protocol}}://{{ admin_host }}:{{ admin_port }}/management/weblogic/latest'
+weblogic_ready_url: '{{ admin_http_protocol }}://{{ admin_host }}:{{ admin_port }}/weblogic/ready'
+local_administration_port_override: 9500
+
+# Domain Name
+domain_name: 'dynClusterDomain'
+domain_home: '/u01/domains'
+domain_dir: '{{ domain_home }}/{{ domain_name }}'
+domain_template: '{{ weblogic_home }}/common/templates/wls/wls.jar'
+domain_classpath: '/Security/base_domain/User/{{admin_user}}'
+domain_jar: 'domain.jar'
+domain_pack_jar: '/u01/app/{{ domain_jar }}'
+
+#cluster settings
+cluster_name: 'myDynCluster'
+
+#machine settings
+machine_name_prefix: 'machine'
+machine_name_match_expression: '{{ machine_name_prefix }}*'
+
+#managed server settings
+dynamic_cluster_size: 3
+max_dynamic_cluster_size: 8
+managed_server_prefix: 'ms'
+server_template_name: 'dyn-cluster-template'
+
+ms_port_min: '8000'
+ms_port_max: '{{ (ms_port_min|int + max_dynamic_cluster_size|int) }}'
+ms_ssl_port_min: '8200'
+ms_ssl_port_max: '{{ (ms_ssl_port_min|int + max_dynamic_cluster_size|int) }}'
+ms_channel_port_min: '8500'
+ms_channel_port_max: '{{ (ms_channel_port_min|int + max_dynamic_cluster_size|int) }}'
+t3_channel_name: 't3channel'
+
+#script directory
+script_dir: '/u01/app/scripts'
+
+# Nodemanager settings
+nm_home : '{{ domain_home }}/nodemanager'
+nm_listen_port: '5556'
+nm_listen_address: '{{ ansible_fqdn }}'
+nm_user: 'weblogic'
+
+# server startup arguments
+server_startup_arguments: '-Djava.security.egd=file:/dev/urandom -Dlog4j2.formatMsgNoLookups=true'
