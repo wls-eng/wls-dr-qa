@@ -142,3 +142,27 @@
   command: 'systemctl restart firewalld'
   register: ohs_component_start_result
   become: true
+
+- name: "verify access to WebLogic App through OHS on HTTP Port"
+  uri:
+    url: "{{ ohs_application_http_url }}"
+    method: GET
+    validate_certs: no
+    return_content: true
+  register: http_result
+  until: http_result.status == 200
+  retries: 5
+  delay: 5
+  when: inventory_hostname in groups['admin_vm']
+
+- name: "verify access to WebLogic App through OHS on HTTPS Port"
+  uri:
+    url: "{{ ohs_application_https_url }}"
+    method: GET
+    validate_certs: no
+    return_content: true
+  register: https_result
+  until: https_result.status == 200
+  retries: 5
+  delay: 5
+  when: inventory_hostname in groups['admin_vm']

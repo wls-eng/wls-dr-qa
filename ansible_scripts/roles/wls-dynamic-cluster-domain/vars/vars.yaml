@@ -48,6 +48,9 @@ t3_channel_name: 't3channel'
 #script directory
 script_dir: '/u01/app/scripts'
 
+#work directory
+work_dir: '/u01/app/work'
+
 # Nodemanager settings
 nm_home : '{{ domain_home }}/nodemanager'
 nm_listen_port: '5556'
@@ -56,3 +59,7 @@ nm_user: 'weblogic'
 
 # server startup arguments
 server_startup_arguments: '-Djava.security.egd=file:/dev/urandom -Dlog4j2.formatMsgNoLookups=true'
+
+#deployment app details
+deployAppName: 'replicationwebapp'
+deployAppFileName: 'replicationwebapp.war'

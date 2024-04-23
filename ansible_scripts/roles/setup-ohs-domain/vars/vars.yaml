@@ -24,3 +24,6 @@ admin_user: 'adminuser'
 admin_t3_url: '{{ admin_t3_protocol }}://{{ admin_host }}:{{ admin_port }}'
 admin_console_url: '{{ admin_http_protocol }}://{{ admin_external_ip }}:{{ admin_port }}/console'
 admin_rest_management_url: '{{admin_http_protocol}}://{{ admin_host }}:{{ admin_port }}/management/weblogic/latest'
+
+ohs_application_http_url: 'http://{{ admin_host }}:{{ ohs_http_port }}/replicationwebapp/FirstServlet'
+ohs_application_https_url: 'https://{{ admin_host }}:{{ ohs_https_port }}/replicationwebapp/FirstServlet'
