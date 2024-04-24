@@ -25,6 +25,15 @@
   become_user: "{{ oracle_user }}"
   when: inventory_hostname in groups['admin_vm']
 
+- name: create work directory
+  file:
+    path: "{{ work_dir }}"
+    state: directory
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+
 - name: create domain directory
   file:
     path: "{{ domain_dir }}"
@@ -228,6 +237,41 @@
 - name: "print admin console URL"
   debug:
     msg: "Admin Console URL: {{ admin_console_url }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: "verify admin console URL access"
+  uri:
+    url: "{{ admin_console_url }}"
+    method: GET
+    validate_certs: no
+  register: _result
+  until: _result.status == 200
+  retries: 5
+  delay: 5
+  when: inventory_hostname in groups['admin_vm']
+
+- name: copy Deploy App file
+  copy:
+    src: "{{ deployAppFileName }}"
+    dest: "{{ work_dir }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: copy deploy App python script
+  template: src=deployApp.py dest={{ script_dir }} owner={{ oracle_user }} group={{ oracle_group }}
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+
+- name: "deploy App on dynamic cluster"
+  register: "depoloyApp"
+  shell: "export WLST_PROPERTIES='-Dweblogic.security.TrustKeyStore=DemoTrust'; {{ weblogic_home }}/common/bin/wlst.sh {{ script_dir }}/deployApp.py"
+  args:
+    chdir: "{{ domain_dir }}"
+  become: true
+  become_user: "{{ oracle_user }}"
   when: inventory_hostname in groups['admin_vm']
 
 - name: "verify admin console URL access"
