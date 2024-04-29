@@ -26,4 +26,5 @@ module "vcn-subnet-creation" {
   source                = "./modules/vcn-subnet-creation"
   compartment_ocid      = "${var.compartment_ocid}"
   tenancy_ocid          = "${var.tenancy_ocid}"
+  vcn_label             = "${var.vcn_label}"
 }

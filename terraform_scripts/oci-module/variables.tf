@@ -89,3 +89,9 @@ variable "secure_mode" {
   type = bool
   default = true
 }
+
+variable "vcn_label" {
+  description = "Define label for VCN being created"
+  type = string
+  default = "wlsVCN"
+}
