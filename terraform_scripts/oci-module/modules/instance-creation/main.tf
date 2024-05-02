@@ -56,7 +56,13 @@ resource "null_resource" "ansible-exec" {
   provisioner "local-exec" {
     on_failure  = fail
     interpreter = ["/bin/bash", "-c"]
-    command     = "chmod 0755 ${path.module}/../../../templates/writeInventory.py; ${path.module}/../../../templates/writeInventory.py ${var.instance_count} ${var.basic_setup} ${var.install_jdk} ${var.install_wls} ${var.ssh_private_key_path} ${var.pca_env} ${var.load_balancer} ${var.secure_mode} ${var.basic_ohs_setup} ${var.install_jdk_for_ohs} ${var.install_ohs} ${var.setup_ohs_domain}"
+    command     = "chmod 0755 ${path.module}/../../../templates/writeInventory.py; ${path.module}/../../../templates/writeInventory.py ${var.instance_count} ${var.basic_setup} ${var.install_jdk} ${var.install_wls} ${var.ssh_private_key_path} ${var.pca_env} ${var.load_balancer} ${var.secure_mode} ${var.basic_ohs_setup} ${var.install_jdk_for_ohs} ${var.install_ohs} ${var.setup_ohs_domain} ${var.vm_type} ${var.site_name}"
+  }
+
+  provisioner "local-exec" {
+    on_failure  = fail
+    interpreter = ["/bin/bash", "-c"]
+    command     = "chmod 0755 ${path.module}/../../../templates/writeGLBInventory.py; ${path.module}/../../../templates/writeGLBInventory.py ${var.vm_type}"
   }
 
   /* commenting this block, as the ansible playbook will be executed separately outside of terraform */

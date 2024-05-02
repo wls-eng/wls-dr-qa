@@ -138,3 +138,15 @@ variable "setup_ohs_domain" {
   type = bool
   default=true
 }
+
+variable "vm_type" {
+  description = "vm type indicating if the vm will host WLS or Global Loadbalancer"
+  type = string
+  default = "WLS"
+}
+
+variable "site_name" {
+  description = "site name of the HA-DA site being created"
+  type = string
+  default = "site1"
+}

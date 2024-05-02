@@ -1,0 +1,19 @@
+#ohs domain settings
+
+global_lb_work_dir: "/u01/global_lb"
+
+ohs_http_port: 7777
+ohs_https_port: 4443
+
+application_http_url: 'http://{{ global_lb_ip }}:{{ ohs_http_port }}/replicationwebapp/FirstServlet'
+application_https_url: 'https://{{ global_lb_ip }}:{{ ohs_https_port }}/replicationwebapp/FirstServlet'
+
+site1_lb_vm_ip: "{{ hostvars[groups['site1_lb_vm'][0]]['inventory_hostname']}}"
+site2_lb_vm_ip: "{{ hostvars[groups['site2_lb_vm'][0]]['inventory_hostname']}}"
+
+global_lb_ip: "{{ hostvars[groups['loadbalancer_vm'][0]]['inventory_hostname'] }}"
+
+switch_to_site1_script: "switch_to_site1.sh"
+switch_to_site2_script: "switch_to_site2.sh"
+
+global_lb_vm: "{{loadbalancer_vm}}"

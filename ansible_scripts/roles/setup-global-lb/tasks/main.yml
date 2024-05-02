@@ -1,0 +1,61 @@
+---
+- include_vars: vars.yaml
+
+- name: cleanup work directory, if present
+  file:
+    path: "{{ global_lb_work_dir }}"
+    state: absent
+  become: true
+
+- name: create work directory
+  file:
+    path: "{{ global_lb_work_dir }}"
+    state: directory
+  become: true
+
+
+- name: print loadbalancer vm ip
+  debug:
+     msg: "{{ global_lb_ip }}"
+
+- name: print site1_lb_vm_ip
+  debug:
+     msg: "{{ site1_lb_vm_ip }}"
+
+- name: print site2_lb_vm_ip
+  debug:
+     msg: "{{ site2_lb_vm_ip }}"
+
+- name: replace switch_to_site1.sh with site1_lb_vm_ip
+  template: src="{{ switch_to_site1_script }}" dest="{{ global_lb_work_dir }}"
+
+- name: replace switch_to_site2.sh with site2_lb_vm_ip
+  template: src="{{ switch_to_site2_script }}" dest="{{ global_lb_work_dir }}"
+
+- name: provide executable permission on switch_to_site1_script
+  file: dest={{ global_lb_work_dir }}/{{switch_to_site1_script}} mode=a+x
+
+- name: Switch to site1
+  register: site1_switch_result
+  shell: "{{ global_lb_work_dir }}/{{switch_to_site1_script}}"
+  args:
+    chdir: "{{ global_lb_work_dir }}"
+  become: true
+
+- name: print updated port forwarding IP Table rules
+  shell: "iptables -t nat -L"
+  become: true
+
+- name: provide executable permission on switch_to_site2_script
+  file: dest={{ global_lb_work_dir }}/{{switch_to_site2_script}} mode=a+x
+
+- name: Switch to site2
+  register: site2_switch_result
+  shell: "{{ global_lb_work_dir }}/{{switch_to_site2_script}}"
+  args:
+    chdir: "{{ global_lb_work_dir }}"
+  become: true
+
+- name: print updated port forwarding IP Table rules
+  shell: "iptables -t nat -L"
+  become: true
