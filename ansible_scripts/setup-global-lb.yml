@@ -1,0 +1,9 @@
+- name: Configure Global Load Balancer
+  hosts:  loadbalancer_vm
+  become: true
+  vars_files:
+    - global-vars.yml
+    - secrets.yml
+  roles:
+    - role: setup-global-lb
+      

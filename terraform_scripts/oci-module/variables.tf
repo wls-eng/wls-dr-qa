@@ -95,3 +95,15 @@ variable "vcn_label" {
   type = string
   default = "wlsVCN"
 }
+
+variable "vm_type" {
+   description = "Define vm type (purpose of vm, either used for hosting wls server or hostsing global loadbalancer"
+   type = string
+   default = "WLS"
+}
+
+variable "site_name" {
+  description = "site name of the HA-DA site being created"
+  type = string
+  default = "site1"
+}

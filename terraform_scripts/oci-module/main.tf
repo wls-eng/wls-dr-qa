@@ -17,6 +17,8 @@ module "instance-creation" {
   source_id             = "${var.source_id}"
   secure_mode           = "${var.secure_mode}"
   subnet_id             = "${module.vcn-subnet-creation.public_subnet_id}"
+  vm_type               = "${var.vm_type}"
+  site_name             = "${var.site_name}"
 }
 
 ############################################
