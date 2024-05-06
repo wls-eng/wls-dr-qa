@@ -46,6 +46,28 @@
   shell: "iptables -t nat -L"
   become: true
 
+- name: test access to deployed application through global load balancer http url using site1
+  uri:
+    url: "{{ application_http_url }}"
+    method: GET
+    validate_certs: no
+    return_content: true
+  register: https_result
+  until: https_result.status == 200
+  retries: 5
+  delay: 5
+
+- name: test access to deployed application through global load balancer https url using site1
+  uri:
+    url: "{{ application_https_url }}"
+    method: GET
+    validate_certs: no
+    return_content: true
+  register: https_result
+  until: https_result.status == 200
+  retries: 5
+  delay: 5
+
 - name: provide executable permission on switch_to_site2_script
   file: dest={{ global_lb_work_dir }}/{{switch_to_site2_script}} mode=a+x
 
@@ -59,3 +81,25 @@
 - name: print updated port forwarding IP Table rules
   shell: "iptables -t nat -L"
   become: true
+
+- name: test access to deployed application through global load balancer http url using site1
+  uri:
+    url: "{{ application_http_url }}"
+    method: GET
+    validate_certs: no
+    return_content: true
+  register: https_result
+  until: https_result.status == 200
+  retries: 5
+  delay: 5
+
+- name: test access to deployed application through global load balancer https url using site1
+  uri:
+    url: "{{ application_https_url }}"
+    method: GET
+    validate_certs: no
+    return_content: true
+  register: https_result
+  until: https_result.status == 200
+  retries: 5
+  delay: 5
