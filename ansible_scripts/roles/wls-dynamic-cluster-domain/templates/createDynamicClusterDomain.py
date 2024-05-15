@@ -42,9 +42,12 @@ try:
 
     print('disabling DefaultInternalServlets')
     cd('/Servers/{{ admin_server_name }}')
-    set('DefaultInternalServletsDisabled','true')
+    set('DefaultInternalServletsDisabled','false')
+    set('TunnelingEnabled','true')
 
     cd('/Servers/{{ admin_server_name }}')
+    set('ExternalDNSName','{{ admin_external_ip }}')
+
     create('{{ admin_server_name }}','ServerStart')
     cd('/Servers/{{ admin_server_name }}/ServerStart/{{ admin_server_name }}')
     arguments = cmo.getArguments()
@@ -95,10 +98,11 @@ try:
 
     print('disabling DefaultInternalServlets for servers in dynamic cluster')
     cd('/ServerTemplates/{{ server_template_name }}')
-    set('DefaultInternalServletsDisabled','true')
+    set('DefaultInternalServletsDisabled','false')
 
     cd('/ServerTemplates/{{ server_template_name }}')
     cmo.setAdministrationPort({{ local_administration_port_override }})
+    cmo.setTunnelingEnabled(true)
 
     ssl=create('{{ server_template_name }}','SSL')
     ssl.setEnabled(True)

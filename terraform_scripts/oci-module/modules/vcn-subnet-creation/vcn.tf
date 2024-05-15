@@ -151,6 +151,18 @@ resource "oci_core_default_security_list" "defaultseclist" {
 
   ingress_security_rules {
     stateless = var.security_list_egress_security_rules_stateless
+    protocol = "6"
+    source = "0.0.0.0/0"
+    source_type = "CIDR_BLOCK"
+    description = "Allow access to OHS port 8888"
+    tcp_options {
+      max = 8888
+      min = 8888
+    }
+  }
+
+  ingress_security_rules {
+    stateless = var.security_list_egress_security_rules_stateless
     protocol = "1"
     source = "0.0.0.0/0"
     source_type = "CIDR_BLOCK"
