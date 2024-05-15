@@ -3,6 +3,7 @@ ohs_domain_name: 'ohs_standalone_domain'
 ohs_base_dir: '{{ base_dir }}/ohs/domains'
 ohs_domain_dir: '{{ base_dir }}/ohs/domains/{{ ohs_domain_name }}'
 ohs_component_name: 'ohs_component'
+ohs_http_port_for_wls_admin_server: 8888
 ohs_http_port: 7777
 ohs_https_port: 4443
 ohs_nm_user: 'ohsnmuser'

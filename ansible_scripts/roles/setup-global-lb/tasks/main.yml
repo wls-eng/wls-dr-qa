@@ -42,10 +42,6 @@
     chdir: "{{ global_lb_work_dir }}"
   become: true
 
-- name: print updated port forwarding IP Table rules
-  shell: "iptables -t nat -L"
-  become: true
-
 - name: test access to deployed application through global load balancer http url using site1
   uri:
     url: "{{ application_http_url }}"
@@ -78,10 +74,6 @@
     chdir: "{{ global_lb_work_dir }}"
   become: true
 
-- name: print updated port forwarding IP Table rules
-  shell: "iptables -t nat -L"
-  become: true
-
 - name: test access to deployed application through global load balancer http url using site1
   uri:
     url: "{{ application_http_url }}"
@@ -94,6 +86,35 @@
   delay: 5
 
 - name: test access to deployed application through global load balancer https url using site1
+  uri:
+    url: "{{ application_https_url }}"
+    method: GET
+    validate_certs: no
+    return_content: true
+  register: https_result
+  until: https_result.status == 200
+  retries: 5
+  delay: 5
+
+- name: Switch back to site1
+  register: site1_switch_result
+  shell: "{{ global_lb_work_dir }}/{{switch_to_site1_script}}"
+  args:
+    chdir: "{{ global_lb_work_dir }}"
+  become: true
+
+- name: test access to deployed application through global load balancer http url again using site1
+  uri:
+    url: "{{ application_http_url }}"
+    method: GET
+    validate_certs: no
+    return_content: true
+  register: https_result
+  until: https_result.status == 200
+  retries: 5
+  delay: 5
+
+- name: test access to deployed application through global load balancer https url again using site1
   uri:
     url: "{{ application_https_url }}"
     method: GET

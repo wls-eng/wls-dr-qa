@@ -4,9 +4,16 @@ global_lb_work_dir: "/u01/global_lb"
 
 ohs_http_port: 7777
 ohs_https_port: 4443
+ohs_http_port_for_wls_admin_server: 8888
 
 application_http_url: 'http://{{ global_lb_ip }}:{{ ohs_http_port }}/replicationwebapp/FirstServlet'
 application_https_url: 'https://{{ global_lb_ip }}:{{ ohs_https_port }}/replicationwebapp/FirstServlet'
+
+admin_http_url: 'http://{{ global_lb_ip }}:{{ wls_admin_http_port }}'
+admin_https_url: 'https://{{ global_lb_ip }}:{{ wls_admin_https_port }}'
+
+admin_t3_url: 't3://{{ global_lb_ip }}:{{ wls_admin_http_port }}'
+admin_t3s_url: 't3ss://{{ global_lb_ip }}:{{ wls_admin_https_port }}'
 
 site1_lb_vm_ip: "{{ hostvars[groups['site1_lb_vm'][0]]['inventory_hostname']}}"
 site2_lb_vm_ip: "{{ hostvars[groups['site2_lb_vm'][0]]['inventory_hostname']}}"

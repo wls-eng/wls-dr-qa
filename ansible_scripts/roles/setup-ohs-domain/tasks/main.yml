@@ -128,6 +128,11 @@
   register: ohs_component_start_result
   become: true
 
+- name: Enable OHS PORT {{ ohs_http_port_for_wls_admin_server }}
+  command: 'firewall-cmd --zone=public --add-port={{ ohs_http_port_for_wls_admin_server }}/tcp'
+  register: ohs_component_start_result
+  become: true
+
 - name: Enable OHS HTTPS_PORT {{ ohs_https_port }}
   command: 'firewall-cmd --zone=public --add-port={{ ohs_https_port }}/tcp'
   register: ohs_component_start_result
