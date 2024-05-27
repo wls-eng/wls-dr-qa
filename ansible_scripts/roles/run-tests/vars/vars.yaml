@@ -1,0 +1,4 @@
+##test_base directory
+test_base_dir : '/u01/app/tests/test_base_dir'
+
+odx_wlstest_zip_download_url: 'https://objectstorage.us-phoenix-1.oraclecloud.com/p/HCIdoTW7V9YY6WJhcEjGCBAnO3cmnoLC0GZHLtvRfdYhHM80q7Yokq-j9v4RrXSu/n/odx-pre-customer/b/myBucket/o/wlstest.zip'

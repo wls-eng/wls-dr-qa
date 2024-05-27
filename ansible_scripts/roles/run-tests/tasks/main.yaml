@@ -1,0 +1,145 @@
+- include_vars: vars.yaml
+
+- name: remove workspace directory if present
+  file:
+    path: "{{ test_base_dir }}"
+    state: absent
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: create test_base_dir directory
+  file:
+    path: "{{ test_base_dir }}"
+    state: directory
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: update owner/group as oracle for {{ test_base_dir }} directory
+  file:
+    path: "{{ test_base_dir }}"
+    state: directory
+    owner: "{{ oracle_user }}"
+    group: "{{ oracle_group }}"
+    mode: 0755
+    recurse: yes
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: Changing perm of "{{ test_base_dir }}", adding "+w"
+  file:
+    path: "{{ test_base_dir }}"
+    mode: a+w
+    owner: "{{ oracle_user }}"
+    group: "{{ oracle_group }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: Download wlstest.zip from odx object storage bucket
+  get_url:
+     url: "{{ odx_wlstest_zip_download_url }}"
+     dest: "{{ test_base_dir }}"
+     mode: '0554'
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: unzip wlstest.zip
+  shell: "unzip -qq {{ test_base_dir }}/wlstest.zip -d {{ test_base_dir }}"
+  args:
+     executable: /bin/bash
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: removing wlstest.zip from test_workspace directory
+  file:
+    path: "{{ test_base_dir }}/wlstest.zip"
+    state: absent
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: remove db wallet directory if present
+  file:
+    path: "{{ db_wallet_dir }}"
+    state: absent
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: create db wallet directory for ATP DB for ODX env
+  file:
+    path: "{{ db_wallet_dir }}"
+    state: directory
+    mode: '0755'
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: Download wallet.zip from odx object storage bucket
+  get_url:
+     url: "{{ db_wallet_zip_download_url }}"
+     dest: "{{ db_wallet_dir }}"
+     mode: '0554'
+  become: true
+  become_user: "{{ oracle_user }}"
+
+
+- name: unzip wallet.zip
+  shell: "unzip {{ db_wallet_dir }}/{{ db_wallet_zip_file_name }} -d {{ db_wallet_dir }}"
+  args:
+     executable: /bin/bash
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: removing wallet.zip from wallet directory
+  file:
+    path: "{{ db_wallet_dir }}/{{ db_wallet_zip_file_name }}"
+    state: absent
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: copy cluster_config.properties template
+  template: src=cluster_config.properties dest={{ test_base_dir }}/wlstest/common/wls_ha_dr_test/basic/common/config/cluster_config.properties owner={{ oracle_user }} group={{ oracle_group }}
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: copy runTests.sh to remote
+  template:
+    src: "runTests.sh"
+    dest: "{{ test_base_dir }}"
+    owner: oracle
+    group: oracle
+    mode: 0755
+  become: true
+
+- name: run execute tests in async mode
+  shell: "{{ test_base_dir }}/runTests.sh"
+  args:
+    executable: /bin/bash
+  async: 4200
+  poll: 0
+  become: true
+  become_user: "{{ oracle_user }}"
+  register: test_exec
+
+- name: get the task status using ansible async_status
+  async_status:
+    jid: "{{ test_exec.ansible_job_id }}"
+  register: tracker
+  until: tracker.finished
+  retries: 200
+  delay: 30
+  become: true
+  become_user: "{{ oracle_user }}"
+  ignore_errors: yes
+
+- name: debug output of execution
+  debug:
+    msg: "{{ tracker }}"
+
+- name: display test execution log for reference
+  shell: 'cat {{ test_base_dir }}/*.log || true'
+  become: true
+  become_user: "{{ oracle_user }}"
+
+- name: check and fail the playbook, if the certification test execution had failed
+  fail:
+    msg: "Tests failed on DR/HA WebLogic Cluster Setup !!"
+  when: tracker.rc != 0
+

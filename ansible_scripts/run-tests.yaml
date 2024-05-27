@@ -1,0 +1,8 @@
+---
+- name: invoke certification tests from loadbalancer_vm
+  hosts: loadbalancer_vm
+  vars_files:
+    - global-vars.yml
+    - secrets.yml
+  roles:
+    - role: run-tests
