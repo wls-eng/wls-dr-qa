@@ -6,9 +6,6 @@
     - secrets.yml
   roles:
     - role: basic-setup
-      when: basic_setup | bool
     - role: install-jdk
-      when: install_jdk | bool
     - role: install-wls
-      when: install_wls | bool
     - role: setup-global-lb
