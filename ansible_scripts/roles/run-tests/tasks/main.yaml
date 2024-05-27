@@ -5,14 +5,25 @@
     path: "{{ test_base_dir }}"
     state: absent
   become: true
-  become_user: "{{ oracle_user }}"
 
 - name: create test_base_dir directory
   file:
     path: "{{ test_base_dir }}"
     state: directory
   become: true
-  become_user: "{{ oracle_user }}"
+
+- name: create results directory
+  file:
+    path: "{{ wls_test_results_ctl }}"
+    state: directory
+  become: true
+
+
+- name: create buildout directory
+  file:
+    path: "{{ buildout_ctl }}"
+    state: directory
+  become: true
 
 - name: update owner/group as oracle for {{ test_base_dir }} directory
   file:
@@ -23,7 +34,6 @@
     mode: 0755
     recurse: yes
   become: true
-  become_user: "{{ oracle_user }}"
 
 - name: Changing perm of "{{ test_base_dir }}", adding "+w"
   file:
@@ -32,7 +42,6 @@
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
   become: true
-  become_user: "{{ oracle_user }}"
 
 - name: Download wlstest.zip from odx object storage bucket
   get_url:
@@ -52,44 +61,6 @@
 - name: removing wlstest.zip from test_workspace directory
   file:
     path: "{{ test_base_dir }}/wlstest.zip"
-    state: absent
-  become: true
-  become_user: "{{ oracle_user }}"
-
-- name: remove db wallet directory if present
-  file:
-    path: "{{ db_wallet_dir }}"
-    state: absent
-  become: true
-  become_user: "{{ oracle_user }}"
-
-- name: create db wallet directory for ATP DB for ODX env
-  file:
-    path: "{{ db_wallet_dir }}"
-    state: directory
-    mode: '0755'
-  become: true
-  become_user: "{{ oracle_user }}"
-
-- name: Download wallet.zip from odx object storage bucket
-  get_url:
-     url: "{{ db_wallet_zip_download_url }}"
-     dest: "{{ db_wallet_dir }}"
-     mode: '0554'
-  become: true
-  become_user: "{{ oracle_user }}"
-
-
-- name: unzip wallet.zip
-  shell: "unzip {{ db_wallet_dir }}/{{ db_wallet_zip_file_name }} -d {{ db_wallet_dir }}"
-  args:
-     executable: /bin/bash
-  become: true
-  become_user: "{{ oracle_user }}"
-
-- name: removing wallet.zip from wallet directory
-  file:
-    path: "{{ db_wallet_dir }}/{{ db_wallet_zip_file_name }}"
     state: absent
   become: true
   become_user: "{{ oracle_user }}"

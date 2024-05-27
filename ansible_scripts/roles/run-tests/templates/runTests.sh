@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export WL_HOME="{{ weblogic_home }}"
-export TEST_BASE_DIR="{{ test_work_dir }}"
+export TEST_BASE_DIR="{{ test_base_dir }}"
 export RELEASE="{{ weblogic_home }}/server"
 export WLS_TEST_RESULTS_ctl="{{ wls_test_results_ctl }}"
 export BUILDOUT_ctl="{{ buildout_ctl }}"
@@ -16,7 +16,7 @@ rm -f $TEST_BASE_DIR/*.log
 cd $TEST_BASE_DIR/wlstest
 . ./qaenv.sh
 
-cd $TEST_BASE_DIR/wlstest/wlstest/common/wls_ha_dr_test/basic
+cd $TEST_BASE_DIR/wlstest/common/wls_ha_dr_test/basic
 ant -f basic.cluster.test.xml clean build all > $TEST_BASE_DIR/basic.test.log
 
 sed -n '/\[testlogic\] | Clean run/, /TEST RUN COMPLETE/p' *.test.log
