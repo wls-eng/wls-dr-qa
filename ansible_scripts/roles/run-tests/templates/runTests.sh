@@ -19,6 +19,9 @@ cd $TEST_BASE_DIR/wlstest
 cd $TEST_BASE_DIR/wlstest/common/wls_ha_dr_test/basic
 ant -f basic.cluster.test.xml clean build all > $TEST_BASE_DIR/basic.test.log
 
+cd $TEST_BASE_DIR/wlstest/common/wls_ha_dr_test/session_replication
+ant -f sessionreplication.test.xml clean build all > $TEST_BASE_DIR/session_replication.test.log
+
 sed -n '/\[testlogic\] | Clean run/, /TEST RUN COMPLETE/p' *.test.log
 
 sed -n '/\[testlogic\] | Not a clean run/, /TEST RUN COMPLETE/p' *.test.log
