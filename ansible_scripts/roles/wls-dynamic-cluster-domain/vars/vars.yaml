@@ -63,3 +63,14 @@ server_startup_arguments: '-Djava.security.egd=file:/dev/urandom -Dlog4j2.format
 #deployment app details
 deployAppName: 'replicationwebapp'
 deployAppFileName: 'replicationwebapp.war'
+
+db_wallet_zip_download_url: 'https://objectstorage.us-phoenix-1.oraclecloud.com/p/7Eu9ZuPspSdruOA6GmYE2iUpXX8zYA689gT2gSrlDZWd5NY9xZCVbWW9oZ6aP7u-/n/odx-pre-customer/b/myBucket/o/Wallet_jrfrcu.zip'
+db_wallet_dir: '/u01/app/atp_db/wallets/atp_db_wallet'
+db_wallet_alias: 'jrfrcu_medium'
+
+datasource_name: 'myDatasource'
+datasource_jndiName: 'jdbc/myDatasource'
+datasource_url: 'jdbc:oracle:thin:@{{ db_wallet_alias }}?TNS_ADMIN={{ db_wallet_dir }}'
+datasource_driverClass: 'oracle.jdbc.OracleDriver'
+
+

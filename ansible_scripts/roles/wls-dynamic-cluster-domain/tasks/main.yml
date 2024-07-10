@@ -137,6 +137,56 @@
   become_user: "{{ oracle_user }}"
   when: inventory_hostname in groups['admin_vm']
 
+- name: remove db wallet directory if present
+  file:
+    path: "{{ db_wallet_dir }}"
+    state: absent
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: create db wallet directory for ATP DB for ODX env
+  file:
+    path: "{{ db_wallet_dir }}"
+    state: directory
+    mode: '0755'
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: Download wallet.zip from odx object storage bucket
+  get_url:
+     url: "{{ db_wallet_zip_download_url }}"
+     dest: "{{ db_wallet_dir }}"
+     mode: '0554'
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: unzip wallet.zip
+  shell: "unzip {{ db_wallet_dir }}/{{ db_wallet_zip_file_name }} -d {{ db_wallet_dir }}"
+  args:
+     executable: /bin/bash
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: removing wallet.zip from wallet directory
+  file:
+    path: "{{ db_wallet_dir }}/{{ db_wallet_zip_file_name }}"
+    state: absent
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+- name: run wlst script to create datasource using wallet
+  shell: "export WLST_PROPERTIES='-Dweblogic.security.TrustKeyStore=DemoTrust'; {{ weblogic_home }}/common/bin/wlst.sh {{ script_dir }}/createDataSource.py"
+  args:
+    chdir: "{{ domain_dir }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
 - name: Stop admin server process
   shell: "systemctl stop wls_admin.service || true"
   become: true
