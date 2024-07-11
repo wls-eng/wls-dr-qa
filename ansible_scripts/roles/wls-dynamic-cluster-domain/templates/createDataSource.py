@@ -8,59 +8,63 @@ adminUserName = '{{admin_user}}'
 adminPassword = '{{admin_password}}'
 dataSourceName = '{{datasource_name}}'
 jndiName = '{{datasource_jndiName}}'
-url = '{{datasource_url}}'
+jdbcUrl = '{{datasource_url}}'
 driverClass = '{{datasource_driverClass}}'
 walletPath = '{{db_wallet_dir}}'
+clusterName= '{{cluster_name}}'
+dbUsername='{{db_username}}'
+dbPassword='{{db_password}}'
 
-# Connect to the Admin Server
-connect(adminUserName, adminPassword, adminURL)
+try:
 
-# Start an edit session
-edit()
-startEdit()
+    # Connect to the Admin Server
+    connect(adminUserName, adminPassword, adminURL)
 
-# Create a new JDBC Data Source
-cd('/')
-cmo.createJDBCSystemResource(dataSourceName)
+    # Start an edit session
+    edit()
+    startEdit()
 
-cd('/JDBCSystemResources/' + dataSourceName + '/JDBCResource/' + dataSourceName)
-cmo.setName(dataSourceName)
-cmo.setLeasingEnabled(true)
+    cd('/')
+    cmo.createJDBCSystemResource(dataSourceName)
 
-cd('/JDBCSystemResources/' + dataSourceName + '/JDBCResource/' + dataSourceName + '/JDBCDataSourceParams/' + dataSourceName)
-set('JNDINames', jarray.array([String(jndiName)], String))
+    cd('/JDBCSystemResources/'+dataSourceName+'/JDBCResource/'+dataSourceName)
+    cmo.setName(dataSourceName)
 
-cd('/JDBCSystemResources/' + dataSourceName + '/JDBCResource/' + dataSourceName + '/JDBCDriverParams/' + dataSourceName)
-cmo.setUrl(url)
-cmo.setDriverName(driverClass)
-cmo.setPasswordEncrypted('')
+    cd('/JDBCSystemResources/'+dataSourceName+'/JDBCResource/'+dataSourceName+'/JDBCDataSourceParams/'+dataSourceName)
+    set('JNDINames',jarray.array([String(jndiName)], String))
 
-cd('/JDBCSystemResources/' + dataSourceName + '/JDBCResource/' + dataSourceName + '/JDBCDriverParams/' + dataSourceName + '/Properties/' + dataSourceName)
-cmo.createProperty('oracle.net.wallet_location')
+    cd('/JDBCSystemResources/'+dataSourceName+'/JDBCResource/'+dataSourceName)
+    cmo.setDatasourceType('GENERIC')
 
-cd('/JDBCSystemResources/' + dataSourceName + '/JDBCResource/' + dataSourceName + '/JDBCDriverParams/' + dataSourceName + '/Properties/' + dataSourceName + '/Properties/oracle.net.wallet_location')
-cmo.setValue(walletPath)
+    cd('/JDBCSystemResources/'+dataSourceName+'/JDBCResource/'+dataSourceName+'/JDBCDriverParams/'+dataSourceName)
+    cmo.setUrl(jdbcUrl)
+    cmo.setDriverName(driverClass)
+    cmo.setPassword(dbPassword)
 
-cd('/JDBCSystemResources/' + dataSourceName + '/JDBCResource/' + dataSourceName + '/JDBCConnectionPoolParams/' + dataSourceName)
-cmo.setTestTableName('SQL SELECT 1 FROM DUAL')
+    cd('/JDBCSystemResources/'+dataSourceName+'/JDBCResource/'+dataSourceName+'/JDBCConnectionPoolParams/'+dataSourceName)
+    cmo.setTestTableName('SQL ISVALID\r\n\r\n')
 
-# Configure the cluster for Database Leasing
-cd('/Clusters/{{cluster_name}}')
-cmo.setMigrationBasis('database')
+    cd('/JDBCSystemResources/'+dataSourceName+'/JDBCResource/'+dataSourceName+'/JDBCDriverParams/'+dataSourceName+'/Properties/'+dataSourceName)
+    cmo.createProperty('user')
 
-# Configure the cluster to store HTTP session information in the database
-cd('/Servers')
-servers = cmo.getServers()
-for server in servers:
-    serverName = server.getName()
-    cd('/Servers/' + serverName + '/WebServer/' + serverName + '/WebServerLog/' + serverName)
-    cmo.setJDBCStoreDataSource(sessionJndiName)
-    cmo.setPersistentStoreType('replicated')
-    cmo.setPersistentStoreDirectory('')
+    cd('/JDBCSystemResources/'+dataSourceName+'/JDBCResource/'+dataSourceName+'/JDBCDriverParams/'+dataSourceName+'/Properties/'+dataSourceName+'/Properties/user')
+    cmo.setValue(dbUsername)
 
-# Save and activate the changes
-save()
-activate()
+    cd('/JDBCSystemResources/'+dataSourceName+'/JDBCResource/'+dataSourceName+'/JDBCDataSourceParams/'+dataSourceName)
+    cmo.setGlobalTransactionsProtocol('OnePhaseCommit')
+
+    cd('/JDBCSystemResources/'+dataSourceName)
+    set('Targets',jarray.array([ObjectName('com.bea:Name='+clusterName+',Type=Cluster')], ObjectName))
+
+    # Save and activate the changes
+    save()
+    activate()
+
+except Exception, e:
+    print e
+    dumpStack()
+    undo('true', 'y')
+    cancelEdit('y')
 
 # Disconnect from the Admin Server
 disconnect()
