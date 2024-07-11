@@ -74,4 +74,5 @@ datasource_jndiName: 'jdbc/myDatasource'
 datasource_url: 'jdbc:oracle:thin:@{{ db_wallet_alias }}?TNS_ADMIN={{ db_wallet_dir }}'
 datasource_driverClass: 'oracle.jdbc.OracleDriver'
 
-
+db_username: 'coreqa'
+db_password: 'WLSqa_gumby1234'
