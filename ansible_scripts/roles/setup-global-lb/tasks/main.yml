@@ -26,6 +26,12 @@
   debug:
      msg: "{{ site2_lb_vm_ip }}"
 
+
+- name: save existing ip table rules to file
+  command: "mkdir -p /etc/iptables && iptables-save > /etc/iptables/existing_rules.v4"
+  become: true
+
+
 - name: replace switch_to_site1.sh with site1_lb_vm_ip
   template: src="{{ switch_to_site1_script }}" dest="{{ global_lb_work_dir }}"
 
