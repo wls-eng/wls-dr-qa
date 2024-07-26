@@ -20,6 +20,8 @@ site2_lb_vm_ip: "{{ hostvars[groups['site2_lb_vm'][0]]['inventory_hostname']}}"
 
 global_lb_ip: "{{ hostvars[groups['loadbalancer_vm'][0]]['inventory_hostname'] }}"
 
+iptable_config_script: "configure_iptables.sh"
+
 switch_to_site1_script: "switch_to_site1.sh"
 switch_to_site2_script: "switch_to_site2.sh"
 

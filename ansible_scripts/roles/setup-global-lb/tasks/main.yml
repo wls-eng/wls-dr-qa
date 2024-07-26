@@ -26,11 +26,15 @@
   debug:
      msg: "{{ site2_lb_vm_ip }}"
 
+- name: copy iptable_config_script to global_work_dir
+  template: src="{{ iptable_config_script }}" dest="{{ global_lb_work_dir }}"
 
-- name: save existing ip table rules to file
-  command: "mkdir -p /etc/iptables && iptables-save > /etc/iptables/existing_rules.v4"
+- name: provide executable permission on iptable_config_script
+  file: dest={{ global_lb_work_dir }}/{{iptable_config_script}} mode=a+x
+
+- name: configure iptable settings before using iptable switch option
+  shell: "{{ global_lb_work_dir }}/{{switch_to_site1_script}}"
   become: true
-
 
 - name: replace switch_to_site1.sh with site1_lb_vm_ip
   template: src="{{ switch_to_site1_script }}" dest="{{ global_lb_work_dir }}"
