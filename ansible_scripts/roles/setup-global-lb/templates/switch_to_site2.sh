@@ -1,7 +1,7 @@
 #!/bin/bash
 
-result=$(iptables -t nat -L -v -n --line-numbers | grep "${site2_lb_vm_ip}")
-if [ "$result" == "0" ];
+iptables -t nat -L -v -n --line-numbers | grep "${site2_lb_vm_ip}"
+if [ "$?" == "0" ];
 then
     echo "deleting site2 related iptable rules"
     iptables -t nat -D PREROUTING -p tcp --dport {{ohs_http_port}} -j DNAT --to-destination {{site2_lb_vm_ip}}:{{ohs_http_port}}
@@ -9,8 +9,8 @@ then
     iptables -t nat -D PREROUTING -p tcp --dport {{ohs_http_port_for_wls_admin_server}} -j DNAT --to-destination {{site2_lb_vm_ip}}:{{ ohs_http_port_for_wls_admin_server }}
 fi
 
-result=$(iptables -t nat -L -v -n --line-numbers | grep "${site1_lb_vm_ip}")
-if [ "$result" == "0" ];
+iptables -t nat -L -v -n --line-numbers | grep "${site1_lb_vm_ip}"
+if [ "$?" == "0" ];
 then
     echo "deleting site1 related iptable rules"
     iptables -t nat -D PREROUTING -p tcp --dport {{ohs_http_port}} -j DNAT --to-destination {{site1_lb_vm_ip}}:{{ohs_http_port}}
@@ -18,8 +18,8 @@ then
     iptables -t nat -D PREROUTING -p tcp --dport {{ohs_http_port_for_wls_admin_server}} -j DNAT --to-destination {{site1_lb_vm_ip}}:{{ ohs_http_port_for_wls_admin_server }}
 fi
 
-result=$(iptables -t nat -L -v -n --line-numbers | grep "MASQUERADE")
-if [ "$result" == "0" ];
+iptables -t nat -L -v -n --line-numbers | grep "MASQUERADE"
+if [ "$?" == "0" ];
 then
     echo "Deleting POSTROUTING MASQUERADE rule"
     iptables -t nat -D POSTROUTING -j MASQUERADE
