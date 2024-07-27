@@ -33,7 +33,7 @@
   file: dest={{ global_lb_work_dir }}/{{iptable_config_script}} mode=a+x
 
 - name: configure iptable settings before using iptable switch option
-  shell: "{{ global_lb_work_dir }}/{{switch_to_site1_script}}"
+  shell: "{{ global_lb_work_dir }}/{{iptable_config_script}}"
   become: true
 
 - name: replace switch_to_site1.sh with site1_lb_vm_ip
