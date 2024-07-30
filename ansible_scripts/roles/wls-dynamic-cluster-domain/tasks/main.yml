@@ -301,15 +301,24 @@
   delay: 5
   when: inventory_hostname in groups['admin_vm']
 
-- name: copy Deploy App file
+- name: copy Replication Webapp war file
   copy:
-    src: "{{ deployAppFileName }}"
+    src: "{{ replicationWebAppFileName }}"
     dest: "{{ work_dir }}"
   become: true
   become_user: "{{ oracle_user }}"
   when: inventory_hostname in groups['admin_vm']
 
-- name: copy deploy App python script
+- name: copy SessionCounter Webapp war file
+  copy:
+    src: "{{ sessionCounterAppFileName }}"
+    dest: "{{ work_dir }}"
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
+
+- name: copy deploy replication webapp python script
   template: src=deployApp.py dest={{ script_dir }} owner={{ oracle_user }} group={{ oracle_group }}
   become: true
   become_user: "{{ oracle_user }}"
