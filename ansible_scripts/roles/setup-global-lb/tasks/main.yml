@@ -13,6 +13,17 @@
     state: directory
   become: true
 
+- name: Ensure the user exists
+  user:
+     name: "{{ oracle_user }}"
+     state: present
+
+- name: Grant the user sudo privileges
+  copy:
+     dest: "/etc/sudoers.d/{{ oracle_user }}"
+     content: "{{ oracle_user }} ALL=(ALL) NOPASSWD:ALL"
+     mode: '0440'
+
 
 - name: print loadbalancer vm ip
   debug:
