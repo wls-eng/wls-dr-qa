@@ -27,7 +27,8 @@
   yum:
     name: git
     state: present
-    update_cache: true            
+    update_cache: true
+    lock_timeout: 180
   environment: "{{ proxy_env }}"
   become: true
   tags: install-utils,basic-setup
@@ -37,6 +38,7 @@
     name: wget
     state: present
     update_cache: true
+    lock_timeout: 180
   environment: "{{ proxy_env }}"
   become: true
   tags: install-utils,basic-setup
@@ -46,6 +48,7 @@
     name: tar
     state: present
     update_cache: true
+    lock_timeout: 180
   environment: "{{ proxy_env }}"
   become: true
   tags: install-utils,basic-setup
@@ -55,6 +58,7 @@
     name: zip
     state: present
     update_cache: true
+    lock_timeout: 180
   environment: "{{ proxy_env }}"
   become: true
   tags: install-utils,basic-setup
@@ -64,6 +68,7 @@
     name: unzip 
     state: present
     update_cache: true
+    lock_timeout: 180
   environment: "{{ proxy_env }}"
   become: true
   tags: install-utils,basic-setup
@@ -73,6 +78,7 @@
     name: gzip 
     state: present
     update_cache: true
+    lock_timeout: 180
   environment: "{{ proxy_env }}"
   become: true
   tags: install-utils,basic-setup
@@ -82,6 +88,7 @@
     name: net-tools 
     state: present
     update_cache: true
+    lock_timeout: 180
   environment: "{{ proxy_env }}"
   become: true
   tags: install-utils,basic-setup
