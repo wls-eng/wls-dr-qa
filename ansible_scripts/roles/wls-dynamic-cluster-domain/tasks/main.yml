@@ -34,6 +34,14 @@
   when: inventory_hostname in groups['admin_vm']
 
 
+- name: create work javaee directory
+  file:
+    path: "{{ work_dir }}/{{ javaee_version}}"
+    state: directory
+  become: true
+  become_user: "{{ oracle_user }}"
+  when: inventory_hostname in groups['admin_vm']
+
 - name: create domain directory
   file:
     path: "{{ domain_dir }}"
@@ -304,7 +312,7 @@
 - name: copy Replication Webapp war file
   copy:
     src: "{{ replicationWebAppFileName }}"
-    dest: "{{ work_dir }}"
+    dest: "{{ work_dir }}/{{ javaee_version }}"
   become: true
   become_user: "{{ oracle_user }}"
   when: inventory_hostname in groups['admin_vm']
@@ -312,7 +320,7 @@
 - name: copy SessionCounter Webapp war file
   copy:
     src: "{{ sessionCounterAppFileName }}"
-    dest: "{{ work_dir }}"
+    dest: "{{ work_dir }}/{{ javaee_version}"
   become: true
   become_user: "{{ oracle_user }}"
   when: inventory_hostname in groups['admin_vm']
